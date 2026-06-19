@@ -13,7 +13,6 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - XAI_API_KEY=${XAI_API_KEY}
       - OPENHANDS_URL=http://openhands:8000
-      - OPENHANDS_API_KEY=${OPENHANDS_API_KEY:-local-dev}
     depends_on:
       - db
     volumes:
@@ -33,13 +32,11 @@ services:
     networks:
       - agent-network
 
-  # OpenHands Instance (Execution Arm)
+  # OpenHands Instance (Local Development)
   openhands:
     image: ghcr.io/openhands/agent-canvas:1.0.0-rc.11
     ports:
       - "8000:8000"
-    environment:
-      - OPENHANDS_API_KEY=${OPENHANDS_API_KEY:-local-dev}
     volumes:
       - $HOME/.openhands:/home/openhands/.openhands
       - ./workspace:/projects
