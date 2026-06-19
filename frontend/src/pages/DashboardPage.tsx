@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Settings } from 'lucide-react';
 import { projectsApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { ProjectCard } from '../components/ProjectCard';
@@ -86,6 +86,13 @@ export const DashboardPage: React.FC = () => {
             <h1 className="text-xl font-bold text-gray-900">Agent Orchestrator</h1>
             
             <div className="flex items-center gap-4">
+              <Link
+                to="/admin/settings"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Paramètres
+              </Link>
               <span className="text-sm text-gray-600">
                 {user?.full_name || user?.username}
               </span>

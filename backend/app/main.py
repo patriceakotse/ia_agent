@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.models.database import engine, Base
-from app.api import auth, projects, sessions, teams, git, preview, alerts, llm_settings
+from app.api import auth, projects, sessions, teams, git, preview, alerts, llm_settings, admin_settings
 
 
 @asynccontextmanager
@@ -39,6 +39,7 @@ app.include_router(git.router, prefix=settings.API_V1_PREFIX)
 app.include_router(preview.router, prefix=settings.API_V1_PREFIX)
 app.include_router(alerts.router, prefix=settings.API_V1_PREFIX)
 app.include_router(llm_settings.router, prefix=settings.API_V1_PREFIX)
+app.include_router(admin_settings.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

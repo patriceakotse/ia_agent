@@ -9,6 +9,7 @@ import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { TeamPage } from './pages/TeamPage';
 import { GitSettingsPage } from './pages/GitSettingsPage';
 import { PreviewPage } from './pages/PreviewPage';
+import { AdminSettingsPage } from './pages/AdminSettingsPage';
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <AdminSettingsPage />
               </ProtectedRoute>
             }
           />
