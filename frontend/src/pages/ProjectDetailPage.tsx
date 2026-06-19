@@ -2,11 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Play, CheckCircle, FileText, Loader2, 
-  Send, ExternalLink, AlertCircle, Clock, Bot
+  Send, ExternalLink, AlertCircle, Clock, Bot,
+  GitBranch, Settings, Users, AlertTriangle, Rocket, RefreshCw
 } from 'lucide-react';
 import { projectsApi, documentsApi, sessionsApi } from '../services/api';
 import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Input';
+import { MonacoEditor } from '../components/MonacoEditor';
+import { DocumentHistory } from '../components/DocumentHistory';
 import toast from 'react-hot-toast';
 import type { ProjectDetail, Document, Session, Log, DocumentType } from '../types';
 
@@ -14,7 +17,7 @@ const documentTabs: { type: DocumentType; label: string; icon: React.ElementType
   { type: 'readme', label: 'README', icon: FileText },
   { type: 'specs', label: 'Spécifications', icon: FileText },
   { type: 'tasks', label: 'User Stories', icon: FileText },
-  { type: 'db_schema', label: 'Modèle DB', icon: FileText },
+  { type: 'db_schema', label: 'MCD', icon: FileText },
   { type: 'workflow', label: 'Workflow', icon: FileText },
   { type: 'marketing', label: 'Marketing', icon: FileText },
 ];
@@ -36,11 +39,21 @@ export const ProjectDetailPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const [editingContent, setEditingContent] = useState('');
+  const [originalContent, setOriginalContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [logs, setLogs] = useState<Log[]>([]);
   const [activeSession, setActiveSession] = useState<Session | null>(null);
+  
+  // Nouvelles fonctionnalités
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-4');
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [showGitPanel, setShowGitPanel] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [documentVersions, setDocumentVersions] = useState<any[]>([]);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const fetchProject = useCallback(async () => {
     if (!projectId) return;
@@ -88,9 +101,84 @@ export const ProjectDetailPage: React.FC = () => {
       const doc = project.documents.find(d => d.doc_type === activeTab);
       if (doc) {
         setEditingContent(doc.content || '');
+        setOriginalContent(doc.content || '');
+        // Charger l'historique des versions
+        fetchDocumentVersions(doc.doc_type);
       }
     }
   }, [activeTab, project]);
+
+  // Fonction pour charger l'historique des versions
+  const fetchDocumentVersions = async (docType: string) => {
+    if (!projectId) return;
+    try {
+      const response = await fetch(`/api/projects/${projectId}/documents/${docType}/versions`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      if (response.ok) {
+        const versions = await response.json();
+        setDocumentVersions(versions);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des versions:', error);
+    }
+  };
+
+  // Fonction pour restaurer une version
+  const handleRestoreVersion = async (version: any) => {
+    if (!projectId) return;
+    setIsRestoring(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/documents/${activeTab}/restore/${version.version}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      if (response.ok) {
+        toast.success(`Version ${version.version} restaurée`);
+        await fetchProject();
+        fetchDocumentVersions(activeTab);
+      } else {
+        toast.error('Erreur lors de la restauration');
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la restauration');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  // Fonction pour analyser les logs et détecter les alertes
+  const analyzeLogsForAlerts = (newLogs: Log[]) => {
+    const newAlerts: any[] = [];
+    
+    newLogs.forEach(log => {
+      // Détecter les boucles d'erreurs
+      if (log.message.includes('Retrying') || log.message.includes('Same error')) {
+        newAlerts.push({
+          type: 'loop',
+          severity: 'warning',
+          message: 'Comportement en boucle détecté',
+          timestamp: log.timestamp
+        });
+      }
+      
+      // Détecter les erreurs de compilation
+      if (log.level === 'ERROR' && (
+        log.message.includes('SyntaxError') || 
+        log.message.includes('TypeError') ||
+        log.message.includes('ImportError')
+      )) {
+        newAlerts.push({
+          type: 'compilation_error',
+          severity: 'error',
+          message: log.message.substring(0, 100),
+          timestamp: log.timestamp
+        });
+      }
+    });
+    
+    setAlerts(prev => [...prev, ...newAlerts].slice(-10)); // Garder les 10 dernières alertes
+  };
 
   const handleAnalyze = async () => {
     if (!projectId || !meetingNotes.trim()) {
@@ -233,6 +321,24 @@ export const ProjectDetailPage: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
+              {/* Navigation links */}
+              <Link 
+                to={`/projects/${projectId}/git`}
+                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-1"
+              >
+                <GitBranch className="w-4 h-4" />
+                Git
+              </Link>
+              <Link 
+                to={`/projects/${projectId}/preview`}
+                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-1"
+              >
+                <Rocket className="w-4 h-4" />
+                Preview
+              </Link>
+              
+              <div className="h-6 w-px bg-gray-300 mx-2" />
+              
               {project.status === 'in_progress' && activeSession && (
                 <a
                   href={`/session/${activeSession.openhands_session_id}`}
@@ -241,7 +347,7 @@ export const ProjectDetailPage: React.FC = () => {
                 >
                   <Button variant="secondary" size="sm">
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Ouvrir OpenHands
+                    OpenHands
                   </Button>
                 </a>
               )}
@@ -378,31 +484,56 @@ export const ProjectDetailPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="mb-4 flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={handleSaveContent}
-                        isLoading={isSaving}
-                      >
-                        Sauvegarder
-                      </Button>
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={handleValidate}
-                        isLoading={isSaving}
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Valider
-                      </Button>
+                    {/* Barre d'outils du document */}
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setShowHistoryPanel(!showHistoryPanel)}
+                        >
+                          <Clock className="w-4 h-4 mr-1" />
+                          Historique
+                        </Button>
+                        {activeTab === 'db_schema' && (
+                          <span className="text-xs text-gray-500">
+                            💡 Les diagrammes Mermaid sont automatiquement rendus
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={handleValidate}
+                          isLoading={isSaving}
+                          disabled={getDocument(activeTab)?.is_validated}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          {getDocument(activeTab)?.is_validated ? 'Validé' : 'Valider'}
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Panneau historique */}
+                    {showHistoryPanel && documentVersions.length > 0 && (
+                      <div className="mb-4">
+                        <DocumentHistory
+                          versions={documentVersions}
+                          currentVersion={getDocument(activeTab)?.version || 1}
+                          onRestore={handleRestoreVersion}
+                          isRestoring={isRestoring}
+                        />
+                      </div>
+                    )}
                     
-                    <textarea
-                      value={editingContent}
-                      onChange={(e) => setEditingContent(e.target.value)}
-                      className="w-full h-[400px] p-4 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="Contenu du document..."
+                    {/* Éditeur Monaco avec prévisualisation */}
+                    <MonacoEditor
+                      content={editingContent}
+                      onChange={setEditingContent}
+                      onSave={handleSaveContent}
+                      isSaving={isSaving}
+                      originalContent={originalContent}
                     />
                   </>
                 )}
@@ -426,23 +557,56 @@ export const ProjectDetailPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-purple-600 transition-all"
-                          style={{ width: `${activeSession.progress}%` }}
-                        />
+                    <div className="flex items-center gap-4">
+                      {/* Sélection du modèle LLM */}
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600">Modèle:</label>
+                        <select
+                          value={selectedModel}
+                          onChange={(e) => setSelectedModel(e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm"
+                        >
+                          <option value="gpt-4">GPT-4</option>
+                          <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                          <option value="gpt-3.5-turbo">GPT-3.5</option>
+                          <option value="claude-3-opus">Claude 3 Opus</option>
+                          <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        </select>
                       </div>
-                      {activeSession.current_task && (
-                        <span className="text-sm text-gray-600">
-                          {activeSession.current_task}
-                        </span>
-                      )}
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-purple-600 transition-all"
+                            style={{ width: `${activeSession.progress}%` }}
+                          />
+                        </div>
+                        {activeSession.current_task && (
+                          <span className="text-sm text-gray-600">
+                            {activeSession.current_task}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="p-4">
+                  {/* Alertes intelligentes */}
+                  {alerts.length > 0 && (
+                    <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                        <span className="font-medium text-yellow-800">Alertes détectées</span>
+                      </div>
+                      {alerts.slice(-3).map((alert, idx) => (
+                        <div key={idx} className="text-sm text-yellow-700 mb-1">
+                          • {alert.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Logs */}
                   <div className="bg-gray-900 rounded-lg p-4 h-[200px] overflow-y-auto font-mono text-sm">
                     {logs.length === 0 ? (

@@ -6,6 +6,9 @@ import { useAuthStore } from './store/authStore';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
+import { TeamPage } from './pages/TeamPage';
+import { GitSettingsPage } from './pages/GitSettingsPage';
+import { PreviewPage } from './pages/PreviewPage';
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,33 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProjectDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/projects/:projectId/git"
+            element={
+              <ProtectedRoute>
+                <GitSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/projects/:projectId/preview"
+            element={
+              <ProtectedRoute>
+                <PreviewPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/teams/:teamId"
+            element={
+              <ProtectedRoute>
+                <TeamPage />
               </ProtectedRoute>
             }
           />
