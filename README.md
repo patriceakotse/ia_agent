@@ -29,8 +29,13 @@ Agent Orchestrator automatise le cycle de vie complet d'un projet logiciel :
 ### 🤖 Monitoring Intelligent
 - **Détection de boucles** d'erreurs de compilation
 - **Alertes intelligentes** pour anomalies OpenHands
-- **Sélection du modèle LLM** (GPT-4, Claude, etc.)
+- **Sélection du modèle LLM** (GPT-4, Claude, Grok, etc.)
 - **Logs en temps réel** avec analyse syntaxique
+
+### 🔗 Multi-Provider LLM
+- **OpenAI** - GPT-4, GPT-4 Turbo, GPT-3.5
+- **Anthropic** - Claude 3.5 Sonnet, Claude 3 Opus
+- **xAI** - Grok 4.3, Grok 4, Grok 3
 
 ### ⚙️ DevOps & Déploiement
 - **Déploiement Preview Docker** - containers éphémères pour tester le code généré

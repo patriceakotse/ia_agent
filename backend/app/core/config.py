@@ -18,11 +18,18 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # OpenAI / LLM
+    # LLM Providers
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
+    XAI_API_KEY: Optional[str] = None
+    
+    # Default LLM Settings
     LLM_MODEL: str = "gpt-4"
     LLM_TEMPERATURE: float = 0.7
+    
+    # xAI (Grok) Settings
+    XAI_BASE_URL: str = "https://api.x.ai/v1"
+    XAI_MODEL: str = "grok-4.3"
     
     # OpenHands
     OPENHANDS_URL: str = "http://localhost:3000"
