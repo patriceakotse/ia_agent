@@ -2,14 +2,41 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.models.database import engine, Base
+from app.models.database import engine, Base, SessionLocal
+from app.models.models import User, Team, Project
+from app.services.auth_service import get_password_hash
 from app.api import auth, projects, sessions, teams, git, preview, alerts, llm_settings, admin_settings
+
+
+def seed_default_admin():
+    """Crée un admin par défaut si aucun utilisateur n'existe."""
+    db = SessionLocal()
+    try:
+        # Vérifier si un admin existe déjà
+        existing_admin = db.query(User).filter(User.email == "admin@example.com").first()
+        if not existing_admin:
+            admin = User(
+                email="admin@example.com",
+                username="admin",
+                hashed_password=get_password_hash("admin123"),
+                full_name="Administrator",
+                is_active=True,
+                is_superuser=True
+            )
+            db.add(admin)
+            db.commit()
+            print("✓ Admin par défaut créé: admin@example.com / admin123")
+        else:
+            print("✓ Admin existe déjà")
+    finally:
+        db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: créer les tables
+    # Startup: créer les tables et seed admin
     Base.metadata.create_all(bind=engine)
+    seed_default_admin()
     yield
     # Shutdown: cleanup si nécessaire
 
