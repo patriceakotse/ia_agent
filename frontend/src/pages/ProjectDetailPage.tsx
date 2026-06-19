@@ -321,6 +321,24 @@ export const ProjectDetailPage: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
+              {/* Navigation links */}
+              <Link 
+                to={`/projects/${projectId}/git`}
+                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-1"
+              >
+                <GitBranch className="w-4 h-4" />
+                Git
+              </Link>
+              <Link 
+                to={`/projects/${projectId}/preview`}
+                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-1"
+              >
+                <Rocket className="w-4 h-4" />
+                Preview
+              </Link>
+              
+              <div className="h-6 w-px bg-gray-300 mx-2" />
+              
               {project.status === 'in_progress' && activeSession && (
                 <a
                   href={`/session/${activeSession.openhands_session_id}`}
@@ -329,7 +347,7 @@ export const ProjectDetailPage: React.FC = () => {
                 >
                   <Button variant="secondary" size="sm">
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Ouvrir OpenHands
+                    OpenHands
                   </Button>
                 </a>
               )}

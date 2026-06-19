@@ -18,6 +18,33 @@ Agent Orchestrator automatise le cycle de vie complet d'un projet logiciel :
 
 ---
 
+## ✨ Fonctionnalités Production
+
+### 🛠️ Édition Avancée
+- **Éditeur Monaco** avec prévisualisation Markdown côte à côte
+- **Rendu Mermaid** automatique pour les diagrammes ER (MCD)
+- **Historique des versions** avec rollback
+- **Validation collaborative** des documents
+
+### 🤖 Monitoring Intelligent
+- **Détection de boucles** d'erreurs de compilation
+- **Alertes intelligentes** pour anomalies OpenHands
+- **Sélection du modèle LLM** (GPT-4, Claude, etc.)
+- **Logs en temps réel** avec analyse syntaxique
+
+### ⚙️ DevOps & Déploiement
+- **Déploiement Preview Docker** - containers éphémères pour tester le code généré
+- **Intégration GitHub/GitLab** - création de PRs directement depuis l'interface
+- **Gestion multi-branches** avec comparaisons
+
+### 👥 Collaboration & Sécurité
+- **RBAC complet** - Rôles: Owner, Admin, Editor, Viewer
+- **Workspaces** pour organiser les équipes
+- **Isolation Docker** par projet
+- **Audit logs** pour toutes les actions
+
+---
+
 ## 🏗️ Architecture
 
 ```
